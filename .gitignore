@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.triton_cache/
+.tmp/
+.deps/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Local models and downloaded artifacts
+models/
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
