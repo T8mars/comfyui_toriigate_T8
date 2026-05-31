@@ -167,6 +167,13 @@ pip install -r requirements.txt
 `import llama_cpp`，请把 `llama-cpp-python` 安装到启动 ComfyUI 的同一个
 Python 环境中。
 
+推荐按自己的 CUDA / 平台版本手动选择对应 wheel：
+
+- llama-cpp-python 轮子下载：[https://github.com/JamePeng/llama-cpp-python/releases](https://github.com/JamePeng/llama-cpp-python/releases)
+
+`requirements.txt` 只保留节点通用依赖，不会强制安装某个具体版本或某个
+特定后端的 `llama-cpp-python`。
+
 ## 常见问题
 
 ### 节点还是显示旧参数或没有模型下拉框

@@ -1,5 +1,5 @@
-transformers>=4.52.0
-torch>=2.0.0
-Pillow>=9.0.0
-flash-linear-attention>=0.5.0
-triton-windows>=3.6.0; platform_system == "Windows"
+numpy
+Pillow
+requests
+torch
+transformers
