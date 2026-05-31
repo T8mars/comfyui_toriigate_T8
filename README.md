@@ -46,6 +46,10 @@ ComfyUI/models/LLM/ToriiGate-0.5-Q8_0.gguf
 ComfyUI/models/LLM/ToriiGate-0.5-Q8_0.mmproj.gguf
 ```
 
+模型下载地址：
+
+- 夸克网盘：[https://pan.quark.cn/s/cabaa25e75e5](https://pan.quark.cn/s/cabaa25e75e5)
+
 节点会递归扫描 `ComfyUI/models/LLM`：
 
 - `local_model_path`：列出文件名不包含 `mmproj` 的 `.gguf` 文件。
