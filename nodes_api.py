@@ -73,6 +73,10 @@ def _clean_int(value, default: int, min_value: int | None = None, max_value: int
     return number
 
 
+def _clean_choice(value, choices, default):
+    return value if value in choices else default
+
+
 def _comfyui_root() -> Path:
     try:
         import folder_paths
@@ -782,7 +786,9 @@ class LlamaCppVisionGenerate:
     ):
         resolved_model = custom_model_name.strip() if custom_model_name.strip() else model_name.strip()
         actual_server_url = server_url.strip().rstrip("/")
-        actual_runtime = (runtime or "local_gguf").strip()
+        actual_runtime = _clean_choice((runtime or "local_gguf").strip(), ["local_gguf", "api_server"], "local_gguf")
+        chat_handler = _clean_choice(chat_handler, ["auto", "qwen35-vl", "qwen2.5-vl", "llava-1.5"], "auto")
+        decoding = _clean_choice(decoding, ["sample", "greedy_fast"], "sample")
 
         timeout = _clean_float(timeout, 120.0, 5.0, 600.0)
         max_pixels_mp = _clean_float(max_pixels_mp, 1.0, 0.1, 8.0)
@@ -1040,7 +1046,7 @@ class LlamaCppTextGenerate:
     ):
         resolved_model = custom_model_name.strip() if custom_model_name.strip() else model_name.strip()
         actual_server_url = server_url.strip().rstrip("/")
-        actual_runtime = (runtime or "local_gguf").strip()
+        actual_runtime = _clean_choice((runtime or "local_gguf").strip(), ["local_gguf", "api_server"], "local_gguf")
         timeout = _clean_float(timeout, 120.0, 5.0, 600.0)
         max_tokens = _clean_int(max_tokens, 512, 16, 8192)
         n_ctx = _clean_int(n_ctx, 8192, 1024, 131072)
