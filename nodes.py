@@ -446,6 +446,7 @@ class ToriiGateCaptioner:
                         "default": 512,
                         "min": 64,
                         "max": 4096,
+                        "step": 64,
                         "tooltip": "Maximum generated tokens. Lower this for speed: 256-512 for quick captions; 1024+ for fuller long_thoughts formats.",
                     },
                 ),
@@ -478,7 +479,8 @@ class ToriiGateCaptioner:
                     {
                         "default": 0,
                         "min": 0,
-                        "max": 0xFFFFFFFFFFFFFFFF,
+                        "max": 0xFFFFFFFF,
+                        "step": 1,
                         "tooltip": "Seed for reproducibility. Use 0 for a random seed; use a fixed value to repeat results in sample mode.",
                     },
                 ),

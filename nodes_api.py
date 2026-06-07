@@ -21,6 +21,7 @@ import gc
 import io
 import json
 import logging
+import math
 import os
 import random
 from pathlib import Path
@@ -45,6 +46,31 @@ DEFAULT_IMAGE_MIN_TOKENS = 1024
 
 _LOCAL_LLAMA_CACHE = {}
 _LOCAL_LLAMA_LOCK = Lock()
+
+
+def _clean_float(value, default: float, min_value: float | None = None, max_value: float | None = None) -> float:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        number = float(default)
+
+    if not math.isfinite(number):
+        number = float(default)
+
+    if min_value is not None:
+        number = max(float(min_value), number)
+    if max_value is not None:
+        number = min(float(max_value), number)
+    return number
+
+
+def _clean_int(value, default: int, min_value: int | None = None, max_value: int | None = None) -> int:
+    number = int(round(_clean_float(value, float(default), min_value, max_value)))
+    if min_value is not None:
+        number = max(int(min_value), number)
+    if max_value is not None:
+        number = min(int(max_value), number)
+    return number
 
 
 def _comfyui_root() -> Path:
@@ -628,6 +654,7 @@ class LlamaCppVisionGenerate:
                         "default": -1,
                         "min": -1,
                         "max": 999,
+                        "step": 1,
                         "tooltip": "Only used when runtime is local_gguf. -1 asks llama.cpp to offload all possible layers.",
                     },
                 ),
@@ -637,6 +664,7 @@ class LlamaCppVisionGenerate:
                         "default": 0,
                         "min": 0,
                         "max": 256,
+                        "step": 1,
                         "tooltip": "Only used when runtime is local_gguf. 0 lets llama.cpp choose the thread count.",
                     },
                 ),
@@ -690,6 +718,7 @@ class LlamaCppVisionGenerate:
                         "default": 512,
                         "min": 64,
                         "max": 8192,
+                        "step": 64,
                         "tooltip": "Maximum generated tokens.",
                     },
                 ),
@@ -715,7 +744,8 @@ class LlamaCppVisionGenerate:
                     {
                         "default": 0,
                         "min": 0,
-                        "max": 0xFFFFFFFFFFFFFFFF,
+                        "max": 0xFFFFFFFF,
+                        "step": 1,
                         "tooltip": "Seed for reproducibility. Use 0 for a random seed.",
                     },
                 ),
@@ -753,8 +783,15 @@ class LlamaCppVisionGenerate:
         resolved_model = custom_model_name.strip() if custom_model_name.strip() else model_name.strip()
         actual_server_url = server_url.strip().rstrip("/")
         actual_runtime = (runtime or "local_gguf").strip()
-        
-        actual_temperature = 0.0 if decoding == "greedy_fast" else float(temperature)
+
+        timeout = _clean_float(timeout, 120.0, 5.0, 600.0)
+        max_pixels_mp = _clean_float(max_pixels_mp, 1.0, 0.1, 8.0)
+        max_new_tokens = _clean_int(max_new_tokens, 512, 64, 8192)
+        n_ctx = _clean_int(n_ctx, 8192, 1024, 131072)
+        n_gpu_layers = _clean_int(n_gpu_layers, -1, -1, 999)
+        n_threads = _clean_int(n_threads, 0, 0, 256)
+        seed = _clean_int(seed, 0, 0, 0xFFFFFFFF)
+        actual_temperature = 0.0 if decoding == "greedy_fast" else _clean_float(temperature, 0.5, 0.0, 2.0)
 
         print(
             f"[ToriiGate] Caption generation started (Vision {actual_runtime}) "
@@ -891,6 +928,7 @@ class LlamaCppTextGenerate:
                         "default": 512,
                         "min": 16,
                         "max": 8192,
+                        "step": 64,
                         "tooltip": "Maximum number of tokens to generate.",
                     },
                 ),
@@ -925,6 +963,7 @@ class LlamaCppTextGenerate:
                         "default": -1,
                         "min": -1,
                         "max": 999,
+                        "step": 1,
                         "tooltip": "Only used when runtime is local_gguf. -1 asks llama.cpp to offload all possible layers.",
                     },
                 ),
@@ -934,6 +973,7 @@ class LlamaCppTextGenerate:
                         "default": 0,
                         "min": 0,
                         "max": 256,
+                        "step": 1,
                         "tooltip": "Only used when runtime is local_gguf. 0 lets llama.cpp choose the thread count.",
                     },
                 ),
@@ -1001,7 +1041,12 @@ class LlamaCppTextGenerate:
         resolved_model = custom_model_name.strip() if custom_model_name.strip() else model_name.strip()
         actual_server_url = server_url.strip().rstrip("/")
         actual_runtime = (runtime or "local_gguf").strip()
-        actual_temperature = float(temperature)
+        timeout = _clean_float(timeout, 120.0, 5.0, 600.0)
+        max_tokens = _clean_int(max_tokens, 512, 16, 8192)
+        n_ctx = _clean_int(n_ctx, 8192, 1024, 131072)
+        n_gpu_layers = _clean_int(n_gpu_layers, -1, -1, 999)
+        n_threads = _clean_int(n_threads, 0, 0, 256)
+        actual_temperature = _clean_float(temperature, 0.7, 0.0, 2.0)
 
         print(
             f"[ToriiGate] Caption generation started (Text {actual_runtime}) "
@@ -1013,7 +1058,7 @@ class LlamaCppTextGenerate:
             model_name=resolved_model,
             system_prompt=system_prompt,
             user_text=prompt,
-            temperature=float(temperature),
+            temperature=actual_temperature,
             max_tokens=int(max_tokens),
         )
 
